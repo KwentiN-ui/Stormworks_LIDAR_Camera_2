@@ -5,7 +5,7 @@ contin = false
 curpos = 1
 zoom = 0.5 -- 1 -> 0
 w,h = 64,64
-x0,y0 = 0,0.5
+x0,y0 = 0,0
 image = {}
 upscaled_img = {}
 function to_xy(pos,n)
@@ -72,7 +72,6 @@ function normalize(vector,minValue,maxValue)
 	table.sort(sorted)
     local minVector = sorted[1]
     local maxVector = sorted[#sorted]
-    print(minVector,maxVector)
     
     local scaledVector = {}
     
