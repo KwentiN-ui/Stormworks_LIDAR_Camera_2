@@ -107,14 +107,15 @@ function onTick()
 		output.setNumber(2,laser_out.y)
 		output.setBool(1,scanning)
 
-	else
-
 	end
 	
 end
 
 function onDraw()
 	w,h = screen.getWidth(),screen.getHeight()
+	if scanning and not contin then
+		screen.drawTextBox(0,0,w,h,tostring(math.floor(curpos/posmax*100)).."%",0,0)	
+	end
     if not scanning and image[1]~=nil then
     	for i=1,h*h do
     		px = to_xy(i,h)
