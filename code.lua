@@ -114,7 +114,9 @@ end
 function onDraw()
 	w,h = screen.getWidth(),screen.getHeight()
 	if scanning and not contin then
-		screen.drawTextBox(0,0,w,h,tostring(math.floor(curpos/posmax*100)).."%",0,0)	
+		progress = math.floor(curpos/posmax*100)
+		screen.setColor(255-progress*2.55,progress*2.55,0)
+		screen.drawTextBox(0,0,w,h,tostring(progress).."%",0,0)	
 	end
     if not scanning and image[1]~=nil then
     	for i=1,h*h do
@@ -126,6 +128,7 @@ function onDraw()
 
     	end
     elseif image[1]==nil then
+    	screen.setColor(255,255,255)
     	screen.drawText(2,2,"no\ndata")
     end
 end
