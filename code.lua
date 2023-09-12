@@ -65,21 +65,37 @@ function pos_to_laserc(pos,n,x0,y0,zoom)
 	return {x=2*zoom*coords.x/(n)-zoom/n - zoom + x0,y=-2*zoom*coords.y/n + zoom/n + zoom + y0}
 end
 
+function normalize(vector,minValue,maxValue)
+	local sorted = vector
+	table.sort(sorted)
+    local minVector = sorted[1]
+    local maxVector = sorted[#sorted]
+    
+    local scaledVector = {}
+    
+    for i, value in ipairs(vector) do
+        local scaledValue = ((value - minVector) / (maxVector - minVector)) * (maxValue - minValue) + minValue
+        table.insert(scaledVector, scaledValue)
+    end
+    
+    return scaledVector
+end
+
 function onTick()
 	-- Read data
 	dst = input.getNumber(1)
-	
 	if input.getBool(1) then scanning=true end
-	
 	output.setBool(1,scanning)
 	if scanning then
 		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
 		image[curpos] = dst
 		curpos = curpos + 1
+		print(curpos)
 		
 		if curpos-1 >= posmax then
 			scanning = false
 			curpos = 1
+			image = normalize(image,0,255)
 			upscaled_img = mult_upscale(image,img_res,img_mult)
 		end
 		
@@ -102,5 +118,7 @@ function onDraw()
     		screen.drawRectF(px.x-1,px.y-1,1,1)
     		
     	end
+    elseif image[1]==nil then
+    	screen.drawText(2,2,"no\ndata")
     end
 end
