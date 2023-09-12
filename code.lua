@@ -1,5 +1,5 @@
 -- Laser Distance Sensor geht von -1 bis 1
-img_res = 32
+img_res = 16
 scanning = false
 contin = false
 curpos = 1
@@ -48,11 +48,10 @@ function x2upscale(img,n)
 end
 
 function mult_upscale(img,n,k)
+	if k==0 then return img end
 	local upscaled = img
 	local nl = n
 	for i=1,k do
-		print("i:",i)
-		print(#upscaled)
 		upscaled = x2upscale(upscaled,nl)
 		nl = nl*2
 	end
@@ -66,10 +65,14 @@ function pos_to_laserc(pos,n,x0,y0,zoom)
 end
 
 function normalize(vector,minValue,maxValue)
-	local sorted = vector
+	local sorted = {}
+	for i,v in ipairs(vector) do
+		sorted[i] = v
+	end
 	table.sort(sorted)
     local minVector = sorted[1]
     local maxVector = sorted[#sorted]
+    print(minVector,maxVector)
     
     local scaledVector = {}
     
@@ -96,13 +99,9 @@ function onTick()
 		if curpos-1 >= posmax then
 			scanning = false
 			curpos = 1
-			image = normalize(image,0,255)
+			image = normalize(image,0,100)
 			scaling = math.tointeger(math.log(h^2/img_res^2)/math.log(2))
 			upscaled_img = mult_upscale(image,img_res,scaling)
-			print("Image:",(#image))
-			print("Upscaled:",(#upscaled_img))
-			print("Monitor:",h*h)
-			pause()
 		end
 		
 		output.setNumber(1,laser_out.x)
@@ -121,11 +120,10 @@ function onDraw()
     	for i=1,h*h do
     		px = to_xy(i,h)
     		val = upscaled_img[i]
-    		screen.setColor(val,val,val)
+    		screen.setColor(0,val,0)
     		screen.drawRectF(px.x-1,px.y-1,1,1)
     		screen.setColor(255,0,0)
-    		screen.drawText(2,2,#upscaled_img)
-    		screen.drawText(2,8,w*h)
+
     	end
     elseif image[1]==nil then
     	screen.drawText(2,2,"no\ndata")
