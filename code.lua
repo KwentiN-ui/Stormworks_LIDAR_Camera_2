@@ -1,3 +1,9 @@
+-- Colors
+backgr = {0, 30, 30} -- background
+textc = {255,255,255} -- text
+colorscale = {r=0,g=1,b=0} -- image, values between 0-1
+
+
 img_res = 10
 scanning = false
 contin = false
@@ -7,6 +13,7 @@ w,h = 64,64
 x0,y0 = 0,0
 image = {}
 upscaled_img = {}
+pad = 6
 function to_xy(pos,n)
 	-- returns (x,y) for a position integer between 1 and n*n
 	return {x=(pos-1)%n+1,y=(pos-1)//n+1}
@@ -100,23 +107,22 @@ function onTick()
 	posmax = img_res*img_res
 
 	-- Read data
-	dst = input.getNumber(1)
-	if input.getBool(1) then scanning=true end
+	dst = input.getNumber(10)
+	isPressed = input.getBool(1)
+	inputX = input.getNumber(3)
+    inputY = input.getNumber(4)
+	if isPressed then scanning=true end
 	output.setBool(1,scanning)
 	if scanning then
 		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
 		image[curpos] = dst
 		curpos = curpos + 1
 		
-		if curpos-1 >= posmax then
+		if curpos-1 >= posmax then -- SCAN FINISHED
 			scanning = false
 			curpos = 1
 			image = normalize(image,0,100)
-			scaling = math.tointeger(math.log(h^2/img_res^2)/math.log(2))
-			if img_res==h then
-				upscaled_img = image
-			else upscaled_img = upscale(image,h,h)
-			end
+			upscaled_img = upscale(image,w-pad,h-pad)
 		end
 		
 		output.setNumber(1,laser_out.x)
@@ -129,16 +135,22 @@ end
 
 function onDraw()
 	w,h = screen.getWidth(),screen.getHeight()
+	-- will always be drawn:
+	screen.setColor(table.unpack(backgr)) --BG
+	screen.drawClear()
+	screen.setColor(255*colorscale.r,255*colorscale.g,255*colorscale.b)
+	
 	if scanning and not contin then
 		progress = math.floor(curpos/posmax*100)
 		screen.setColor(255-progress*2.55,progress*2.55,0)
 		screen.drawTextBox(0,0,w,h,tostring(progress).."%",0,0)	
 	end
     if not scanning and image[1]~=nil then
-    	for i=1,h*h do
-    		px = to_xy(i,h)
+    	for i=1,#upscaled_img do
+    		px = to_xy(i,w-pad)
     		val = upscaled_img[i]
-    		screen.setColor(0,val,0)
+    		if val==nil then val = 0 end
+    		screen.setColor(val*colorscale.r,val*colorscale.g,val*colorscale.b)
     		screen.drawRectF(px.x-1,px.y-1,1,1)
     		screen.setColor(255,0,0)
 
