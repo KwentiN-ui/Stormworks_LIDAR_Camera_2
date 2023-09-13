@@ -4,9 +4,10 @@ textc = {255,255,255} -- text
 colorscale = {r=0,g=1,b=0} -- image, values between 0-1
 
 -- SETTINGS
-pos_offset = 6 -- make larger if you have black upper left corner
-img_res = 16   -- default resolution
-zoom = 0.5     -- default zoom. Between 1 and 0
+pos_offset = 6   -- make larger if you have black upper left corner
+img_res = 16     -- default resolution
+zoom = 0.5       -- default zoom. Between 1 and 0
+adjust_sens = 10 -- sensitivity for constant offset input on 15,16
 
 setc = screen.setColor
 
@@ -125,7 +126,7 @@ function onTick()
 	inputX = input.getNumber(3)
     inputY = input.getNumber(4)
     
-    tilt_comp = {x=10*input.getNumber(12),y=10*input.getNumber(11)}
+    tilt_comp = {x=adjust_sens*input.getNumber(12),y=adjust_sens*input.getNumber(11)}
     if tilt_comp.x==nil then tilt_comp.x=0 end
     if tilt_comp.y==nil then tilt_comp.y=0 end
     
