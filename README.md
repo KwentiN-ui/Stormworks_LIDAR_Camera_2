@@ -8,7 +8,7 @@ LUA Code for capturing LIDAR images using the laser distance sensor.
     - [x] laser coordinate from matrix position
     - [ ] ...
 - [x] Image Mode
-- [ ]  Upscaling algorithm
+- [x]  Upscaling algorithm
 - [ ] Continous scan mode
     - [ ] Pause button
 - [ ] input realtime dx dy adjustments
