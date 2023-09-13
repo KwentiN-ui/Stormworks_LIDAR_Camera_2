@@ -216,13 +216,13 @@ function onDraw()
 	setc(0,0,0)
 	screen.drawRectF(0,0,w-pad,h-pad)
 	
-	if scanning then setc(0,255,0) else setc(255,255,255) end
+	if scanning then setc(0,255,0) else setc(table.unpack(textc)) end
 	screen.drawTextBox(0,0,w-1,8,"S",1,0)
 	
-	if reset then setc(0,255,0) else setc(255,255,255) end
+	if reset then setc(0,255,0) else setc(table.unpack(textc)) end
 	screen.drawTextBox(0,8,w-1,8,"R",1,0)
 	
-	if zoombutton.cur then setc(0,255,0) else setc(255,255,255) end
+	if zoombutton.cur then setc(0,255,0) else setc(table.unpack(textc)) end
 	if selected.val~=nil then
 		screen.drawTextBox(0,16,w-1,8,"+",1,0)
 	else
@@ -230,7 +230,7 @@ function onDraw()
 	end
 	
 	-- Modusanzeige
-	setc(255,255,255)
+	setc(table.unpack(textc))
 	if mode==1 then
 		screen.drawRectF(w-pad,h-pad,pad,pad)	
 	end
@@ -249,7 +249,7 @@ function onDraw()
 	
     -- Progress line
 	if scanning then
-    	setc(255,255,255)
+    	setc(table.unpack(textc))
     	screen.drawLine(0,h-pad,curpos/posmax*(w-pad),h-pad)
 	end
 	
@@ -264,15 +264,15 @@ function onDraw()
 
     	-- Pixel selection marker
     	if selected.val~=nil then
-    		setc(255,255,255)
+    		setc(table.unpack(textc))
     		screen.drawCircle(selected.px,selected.py,3)
     		screen.drawTextBox(0,h-pad+1,w-pad,pad,selected.val,0)
     	end
     elseif upscaled_img[1]==nil then
-    	setc(255,255,255)
-    	screen.drawText(0,1,"SCAN>")
-    	screen.drawText(0,9,"RST>")
-    	screen.drawText(0,17,"ZOOM>")
-    	screen.drawText(0,h-pad+1,"RES>")
+    	setc(table.unpack(textc))
+    	screen.drawTextBox(0,1,w-pad,8,"SCAN>",1)
+    	screen.drawTextBox(0,9,w-pad,8,"RST>",1)
+    	screen.drawTextBox(0,17,w-pad,8,"ZOOM>",1)
+    	screen.drawTextBox(0,h-pad+1,w-pad,8,"RES>",1)
     end
 end
