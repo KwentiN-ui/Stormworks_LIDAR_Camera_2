@@ -128,15 +128,20 @@ function onTick()
 	if scanbutton.cur and not scanbutton.last then curpos = 1 scanning=not scanning end
 	
 	-- Zoom to selection
-	zoombutton.cur = isPressed and selected.val~=nil and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
+	zoombutton.cur = isPressed and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
 	
 	if zoombutton.cur and not zoombutton.last then
 		scanning = true
 		curpos = 1
-		zoom = zoom/2
-		-- X0,Y0 anpassen!
-		x0 = x0 + selected.px/(w-pad) * 2*zoom -zoom
-		y0 = y0 + -selected.py/(h-pad) * 2*zoom +zoom
+		if selected.val~=nil then
+			zoom = zoom/2
+			-- X0,Y0 anpassen!
+			x0 = x0 + selected.px/(w-pad) * 2*zoom -zoom
+			y0 = y0 + -selected.py/(h-pad) * 2*zoom +zoom
+		else
+			zoom = 2*zoom
+			if zoom>1 then zoom=1 end
+		end
 		selected = {px=nil,py=nil,val=nil}
 	end
 	
@@ -192,9 +197,12 @@ function onDraw()
 	if reset then setc(0,255,0) else setc(255,255,255) end
 	screen.drawTextBox(0,8,w-1,8,"R",1,0)
 	
-	if zoombutton.cur then setc(0,255,0) elseif selected.val==nil then setc(255,255,255,20) else setc(255,255,255) end
-	screen.drawTextBox(0,16,w-1,8,"Z",1,0)
-	
+	if zoombutton.cur then setc(0,255,0) else setc(255,255,255) end
+	if selected.val~=nil then
+		screen.drawTextBox(0,16,w-1,8,"+",1,0)
+	else
+		screen.drawTextBox(0,16,w-1,8,"-",1,0)
+	end
     if image[1]~=nil then
     	for i=1,#upscaled_img do
     		px = to_xy(i,w-pad)
