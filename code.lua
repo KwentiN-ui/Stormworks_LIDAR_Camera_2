@@ -3,15 +3,18 @@ backgr = {0, 30, 30} -- background
 textc = {255,255,255} -- text
 colorscale = {r=0,g=1,b=0} -- image, values between 0-1
 
+-- SETTINGS
+pos_offset = 6 -- make larger if you have black upper left corner
+img_res = 16   -- default resolution
+zoom = 0.5     -- default zoom. Between 1 and 0
+
 setc = screen.setColor
 
-img_res = 16
 posmax = img_res^2
 scanning = false
 contin = false
-curpos = 1
-zoom = 0.5 -- 1 -> 0
-w,h = 64,64
+curpos = 1 - pos_offset
+w,h = 64,64 
 x0,y0 = 0,0
 image = {}
 upscaled_img = {}
@@ -124,14 +127,14 @@ function onTick()
     
     -- Toggle Scan
     scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
-	if scanbutton.cur and not scanbutton.last then curpos = 1 image = {} scanning=not scanning end
+	if scanbutton.cur and not scanbutton.last then curpos = 1 - pos_offset image = {} scanning=not scanning end
 	
 	-- Zoom to selection
 	zoombutton.cur = isPressed and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
 	
 	if zoombutton.cur and not zoombutton.last then
 		scanning = true
-		curpos = 1
+		curpos = 1 - pos_offset
 		image = {}
 		if selected.val~=nil then
 			zoom = zoom/2
@@ -156,7 +159,7 @@ function onTick()
 		if mode==3 then img_res = h//4 end
 		if mode==4 then img_res = h//8 end
 		if mode==5 then img_res = h//16 end
-		curpos = 1
+		curpos = 1 - pos_offset
 		posmax = img_res^2
 		image = {}
 	end
@@ -165,7 +168,7 @@ function onTick()
 	if reset then 
 		zoom = 0.5 x0,y0 = 0,0 
 		selected = {px=nil,py=nil,val=nil}
-		curpos = 1
+		curpos = 1 - pos_offset
 		image = {}
 		end
 	
@@ -176,26 +179,25 @@ function onTick()
 		selected.val = math.floor(upscaled_data[to_pos(inputX,inputY,w-pad)]*10)/10
 	end
 	
-	output.setBool(1,scanning)
 	if scanning then
-		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
-		image[curpos] = dst
+		if curpos>0 then image[curpos] = dst end
+		
 		curpos = curpos + 1
 		
 		if curpos-1 >= posmax then -- SCAN FINISHED
-			curpos = 1
+			curpos = 1 - pos_offset
 			normalized = normalize(image,0,255)
 			upscaled_img = upscale(normalized,w-pad,h-pad)
 			upscaled_data = upscale(image,w-pad,h-pad)
 			image = {}
 		end
 		
+		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
 		output.setNumber(1,laser_out.x)
 		output.setNumber(2,laser_out.y)
-		output.setBool(1,scanning)
-
 	end
 	
+	output.setBool(1,scanning)
 	scanbutton.last = scanbutton.cur
 	zoombutton.last = zoombutton.cur
 	modebutton.last = modebutton.cur
@@ -240,6 +242,11 @@ function onDraw()
 		screen.drawRectF(w-pad,h-pad,pad/4,pad/4)
 	end
 	
+    -- Progress line
+	if scanning then
+    	setc(255,255,255)
+    	screen.drawLine(0,h-pad,curpos/posmax*(w-pad),h-pad)
+	end
 	
     if upscaled_img[1]~=nil then
     	for i=1,#upscaled_img do
@@ -249,12 +256,7 @@ function onDraw()
     		setc(val*colorscale.r,val*colorscale.g,val*colorscale.b)
     		screen.drawRectF(px.x-1,px.y-1,1,1)
     	end
-    	
-    	-- Progress line
-    	if scanning then
-	    	setc(255,255,255)
-	    	screen.drawLine(0,h-pad,curpos/posmax*(w-pad),h-pad)
-    	end
+
     	-- Pixel selection marker
     	if selected.val~=nil then
     		setc(255,255,255)
