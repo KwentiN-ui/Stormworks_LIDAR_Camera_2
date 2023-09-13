@@ -1,5 +1,5 @@
 -- Laser Distance Sensor geht von -1 bis 1
-img_res = 16
+img_res = 2
 scanning = false
 contin = false
 curpos = 1
@@ -13,49 +13,63 @@ function to_xy(pos,n)
 	return {x=(pos-1)%n+1,y=(pos-1)//n+1}
 end
 
-function x2upscale(img,n)
-	local upscaled = {}
-	for i,v in ipairs(img) do
-		table.insert(upscaled,v)
-		
-		oben = img[i-n]
-		unten = img[i+n]
-		links = img[i-1]
-		rechts = img[i+1]
-		amt = 4
-		if oben == nil then
-			oben = 0
-			amt = amt-1
-		end
-		if unten == nil then
-			unten = 0
-			amt = amt-1
-		end
-		if links == nil then
-			links = 0
-			amt = amt-1
-		end
-		if rechts == nil then
-			rechts = 0
-			amt = amt-1
-		end
-				
-		interpol = (oben+unten+links+rechts)/amt
-		
-		table.insert(upscaled,interpol)
-	end
-	return upscaled
+function to_pos(x, y, n)
+    -- returns the position integer for given (x, y) coordinates in an n*n matrix
+    return (y-1)*n + x
 end
 
-function mult_upscale(img,n,k)
-	if k==0 then return img end
-	local upscaled = img
-	local nl = n
-	for i=1,k do
-		upscaled = x2upscale(upscaled,nl)
-		nl = nl*2
-	end
-	return upscaled
+function upscale(vector, new_width, new_height)
+    local size = #vector
+    local n = math.sqrt(size)
+    
+    if math.floor(n) ~= n then
+        error("Invalid vector size. Vector length must be a perfect square.")
+    end
+    
+    local scale_x = new_width / n
+    local scale_y = new_height / n
+    
+    local resized_vector = {}
+    
+    for y = 1, new_height do
+        local source_y = (y - 0.5) / scale_y + 0.5
+        
+        if source_y < 1 then
+            source_y = 1
+        elseif source_y > n then
+            source_y = n
+        end
+        
+        local y1 = math.floor(source_y)
+        local y2 = math.ceil(source_y)
+        local y_alpha = source_y - y1
+        
+        for x = 1, new_width do
+            local source_x = (x - 0.5) / scale_x + 0.5
+            
+            if source_x < 1 then
+                source_x = 1
+            elseif source_x > n then
+                source_x = n
+            end
+            
+            local x1 = math.floor(source_x)
+            local x2 = math.ceil(source_x)
+            local x_alpha = source_x - x1
+            
+            local top_left = vector[(y1-1)*n + x1]
+            local top_right = vector[(y1-1)*n + x2]
+            local bottom_left = vector[(y2-1)*n + x1]
+            local bottom_right = vector[(y2-1)*n + x2]
+            
+            local interpolated_value = (1 - y_alpha) * ((1 - x_alpha) * top_left + x_alpha * top_right) + 
+                                       y_alpha * ((1 - x_alpha) * bottom_left + x_alpha * bottom_right)
+            
+            table.insert(resized_vector, interpolated_value)
+        end
+    end
+    
+    return resized_vector
 end
 
 function pos_to_laserc(pos,n,x0,y0,zoom)
@@ -100,7 +114,10 @@ function onTick()
 			curpos = 1
 			image = normalize(image,0,100)
 			scaling = math.tointeger(math.log(h^2/img_res^2)/math.log(2))
-			upscaled_img = mult_upscale(image,img_res,scaling)
+			if img_res==h then
+				upscaled_img = image
+			else upscaled_img = upscale(image,h,h)
+			end
 		end
 		
 		output.setNumber(1,laser_out.x)
