@@ -125,6 +125,10 @@ function onTick()
 	inputX = input.getNumber(3)
     inputY = input.getNumber(4)
     
+    tilt_comp = {x=10*input.getNumber(12),y=10*input.getNumber(11)}
+    if tilt_comp.x==nil then tilt_comp.x=0 end
+    if tilt_comp.y==nil then tilt_comp.y=0 end
+    
     -- Toggle Scan
     scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
 	if scanbutton.cur and not scanbutton.last then curpos = 1 - pos_offset image = {} scanning=not scanning end
@@ -197,7 +201,7 @@ function onTick()
 			image = {}
 		end
 		
-		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
+		laser_out = pos_to_laserc(curpos,img_res,x0 - tilt_comp.x,y0 - tilt_comp.y,zoom)
 		output.setNumber(1,laser_out.x)
 		output.setNumber(2,laser_out.y)
 	end
