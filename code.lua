@@ -3,6 +3,7 @@ backgr = {0, 30, 30} -- background
 textc = {255,255,255} -- text
 colorscale = {r=0,g=1,b=0} -- image, values between 0-1
 
+setc = screen.setColor
 
 img_res = 10
 scanning = false
@@ -13,7 +14,9 @@ w,h = 64,64
 x0,y0 = 0,0
 image = {}
 upscaled_img = {}
+upscaled_data = {}
 pad = 6
+selected = {px=nil,py=nil,val=nil}
 
 scanbutton = {cur=false,last=false}
 
@@ -119,10 +122,23 @@ function onTick()
 	inputX = input.getNumber(3)
     inputY = input.getNumber(4)
     
-    
+    -- Toggle Scan
     scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
-
 	if scanbutton.cur and not scanbutton.last then scanning=not scanning end
+	
+	reset = isPointInRectangle(inputX,inputY,w-pad, 8, pad, 8)
+	if reset then 
+		zoom = 0.5 x0,y0 = 0,0 
+		selected = {px=nil,py=nil,val=nil}
+		end
+	
+	-- Pixel selection
+	if upscaled_data[1]~=nil and isPressed and isPointInRectangle(inputX, inputY, 0, 0, w-pad, h-pad) then
+		selected.px = inputX
+		selected.py = inputY
+		selected.val = math.floor(upscaled_data[to_pos(inputX,inputY,w-pad)]*10)/10
+	end
+	
 	output.setBool(1,scanning)
 	if scanning then
 		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
@@ -132,8 +148,9 @@ function onTick()
 		if curpos-1 >= posmax then -- SCAN FINISHED
 			--scanning = false
 			curpos = 1
-			image = normalize(image,0,100)
-			upscaled_img = upscale(image,w-pad,h-pad)
+			normalized = normalize(image,0,100)
+			upscaled_img = upscale(normalized,w-pad,h-pad)
+			upscaled_data = upscale(image,w-pad,h-pad)
 		end
 		
 		output.setNumber(1,laser_out.x)
@@ -148,24 +165,42 @@ end
 function onDraw()
 	w,h = screen.getWidth(),screen.getHeight()
 	-- will always be drawn:
-	screen.setColor(table.unpack(backgr)) --BG
+	setc(table.unpack(backgr)) --BG
 	screen.drawClear()
-	screen.setColor(255*colorscale.r,255*colorscale.g,255*colorscale.b)
-	if scanning then screen.setColor(0,255,0) else screen.setColor(255,255,255) end
+	setc(0,0,0)
+	screen.drawRectF(0,0,w-pad,h-pad)
+	
+	if scanning then setc(0,255,0) else setc(255,255,255) end
 	screen.drawTextBox(0,0,w-1,8,"S",1,0)
+	
+	if reset then setc(0,255,0) else setc(255,255,255) end
+	screen.drawTextBox(0,8,w-1,8,"R",1,0)
 	
     if image[1]~=nil then
     	for i=1,#upscaled_img do
     		px = to_xy(i,w-pad)
     		val = upscaled_img[i]
     		if val==nil then val = 0 end
-    		screen.setColor(val*colorscale.r,val*colorscale.g,val*colorscale.b)
+    		setc(val*colorscale.r,val*colorscale.g,val*colorscale.b)
     		screen.drawRectF(px.x-1,px.y-1,1,1)
-    		screen.setColor(255,0,0)
-
+    	end
+    	setc(255,255,255,20)
+    	screen.drawLine((w-pad)/2, 0, (w-pad)/2, h-pad) -- vert
+    	screen.drawLine(0, (h-pad)/2, w-pad, (h-pad)/2) -- hor
+    	
+    	-- Progress line
+    	if scanning then
+	    	setc(255,255,255)
+	    	screen.drawLine(0,h-pad,curpos/posmax*(w-pad),h-pad)
+    	end
+    	-- Pixel selection marker
+    	if selected.val~=nil then
+    		setc(255,255,255)
+    		screen.drawCircle(selected.px,selected.py,3)
+    		screen.drawTextBox(0,h-pad,w-pad,pad,selected.val)
     	end
     elseif image[1]==nil then
-    	screen.setColor(255,255,255)
+    	setc(255,255,255)
     	screen.drawText(2,2,"no\ndata")
     end
 end
