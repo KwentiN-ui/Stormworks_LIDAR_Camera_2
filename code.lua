@@ -5,7 +5,7 @@ colorscale = {r=0,g=1,b=0} -- image, values between 0-1
 
 setc = screen.setColor
 
-img_res = 10
+img_res = 16
 scanning = false
 contin = false
 curpos = 1
@@ -125,19 +125,26 @@ function onTick()
     
     -- Toggle Scan
     scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
-	if scanbutton.cur and not scanbutton.last then scanning=not scanning end
+	if scanbutton.cur and not scanbutton.last then curpos = 1 scanning=not scanning end
 	
 	-- Zoom to selection
-	zoombutton.cur = selected.val~=nil and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
+	zoombutton.cur = isPressed and selected.val~=nil and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
 	
 	if zoombutton.cur and not zoombutton.last then
-		print("Y")	
+		scanning = true
+		curpos = 1
+		zoom = zoom/2
+		-- X0,Y0 anpassen!
+		x0 = x0 + selected.px/(w-pad) * 2*zoom -zoom
+		y0 = y0 + -selected.py/(h-pad) * 2*zoom +zoom
+		selected = {px=nil,py=nil,val=nil}
 	end
 	
-	reset = isPointInRectangle(inputX,inputY,w-pad, 8, pad, 8)
+	reset = isPressed and isPointInRectangle(inputX,inputY,w-pad, 8, pad, 8)
 	if reset then 
 		zoom = 0.5 x0,y0 = 0,0 
 		selected = {px=nil,py=nil,val=nil}
+		curpos = 1
 		end
 	
 	-- Pixel selection
@@ -196,6 +203,7 @@ function onDraw()
     		setc(val*colorscale.r,val*colorscale.g,val*colorscale.b)
     		screen.drawRectF(px.x-1,px.y-1,1,1)
     	end
+    	-- Crosshair
     	setc(255,255,255,20)
     	screen.drawLine((w-pad)/2, 0, (w-pad)/2, h-pad) -- vert
     	screen.drawLine(0, (h-pad)/2, w-pad, (h-pad)/2) -- hor
