@@ -6,6 +6,7 @@ colorscale = {r=0,g=1,b=0} -- image, values between 0-1
 setc = screen.setColor
 
 img_res = 16
+posmax = img_res^2
 scanning = false
 contin = false
 curpos = 1
@@ -18,8 +19,12 @@ upscaled_data = {}
 pad = 6
 selected = {px=nil,py=nil,val=nil}
 
+mode = 2
+
 scanbutton = {cur=false,last=false}
 zoombutton = {cur=false,last=false}
+modebutton = {cur=false,last=false}
+
 
 function isPointInRectangle(x, y, rectX, rectY, rectW, rectH)
 	return x > rectX and y > rectY and x < rectX+rectW and y < rectY+rectH
@@ -38,10 +43,6 @@ end
 function upscale(vector, new_width, new_height)
     local size = #vector
     local n = math.sqrt(size)
-    
-    if math.floor(n) ~= n then
-        error("Invalid vector size. Vector length must be a perfect square.")
-    end
     
     local scale_x = new_width / n
     local scale_y = new_height / n
@@ -115,8 +116,6 @@ function normalize(vector,minValue,maxValue)
 end
 
 function onTick()
-	posmax = img_res*img_res
-
 	-- Read data
 	dst = input.getNumber(10)
 	isPressed = input.getBool(1)
@@ -125,7 +124,7 @@ function onTick()
     
     -- Toggle Scan
     scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
-	if scanbutton.cur and not scanbutton.last then curpos = 1 scanning=not scanning end
+	if scanbutton.cur and not scanbutton.last then curpos = 1 image = {} scanning=not scanning end
 	
 	-- Zoom to selection
 	zoombutton.cur = isPressed and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
@@ -133,6 +132,7 @@ function onTick()
 	if zoombutton.cur and not zoombutton.last then
 		scanning = true
 		curpos = 1
+		image = {}
 		if selected.val~=nil then
 			zoom = zoom/2
 			-- X0,Y0 anpassen!
@@ -145,11 +145,28 @@ function onTick()
 		selected = {px=nil,py=nil,val=nil}
 	end
 	
+	-- Cycle mode
+	modebutton.cur = isPressed and isPointInRectangle(inputX,inputY,w-pad, h-pad, pad, pad)
+	if modebutton.cur and not modebutton.last then
+		mode = mode+1
+		if mode>5 then mode=1 end
+		
+		if mode==1 then img_res = h end
+		if mode==2 then img_res = h//2 end
+		if mode==3 then img_res = h//4 end
+		if mode==4 then img_res = h//8 end
+		if mode==5 then img_res = h//16 end
+		curpos = 1
+		posmax = img_res^2
+		image = {}
+	end
+	
 	reset = isPressed and isPointInRectangle(inputX,inputY,w-pad, 8, pad, 8)
 	if reset then 
 		zoom = 0.5 x0,y0 = 0,0 
 		selected = {px=nil,py=nil,val=nil}
 		curpos = 1
+		image = {}
 		end
 	
 	-- Pixel selection
@@ -166,11 +183,11 @@ function onTick()
 		curpos = curpos + 1
 		
 		if curpos-1 >= posmax then -- SCAN FINISHED
-			--scanning = false
 			curpos = 1
-			normalized = normalize(image,0,100)
+			normalized = normalize(image,0,255)
 			upscaled_img = upscale(normalized,w-pad,h-pad)
 			upscaled_data = upscale(image,w-pad,h-pad)
+			image = {}
 		end
 		
 		output.setNumber(1,laser_out.x)
@@ -181,6 +198,7 @@ function onTick()
 	
 	scanbutton.last = scanbutton.cur
 	zoombutton.last = zoombutton.cur
+	modebutton.last = modebutton.cur
 end
 
 function onDraw()
@@ -203,7 +221,27 @@ function onDraw()
 	else
 		screen.drawTextBox(0,16,w-1,8,"-",1,0)
 	end
-    if image[1]~=nil then
+	
+	-- Modusanzeige
+	setc(255,255,255)
+	if mode==1 then
+		screen.drawRectF(w-pad,h-pad,pad,pad)	
+	end
+	if mode==2 then
+		screen.drawRectF(w-pad,h-pad,pad/2,pad)	
+	end
+	if mode==3 then
+		screen.drawRectF(w-pad,h-pad,pad/2,pad/2)	
+	end
+	if mode==4 then
+		screen.drawRectF(w-pad,h-pad,pad/4,pad/2)	
+	end
+	if mode==5 then
+		screen.drawRectF(w-pad,h-pad,pad/4,pad/4)
+	end
+	
+	
+    if upscaled_img[1]~=nil then
     	for i=1,#upscaled_img do
     		px = to_xy(i,w-pad)
     		val = upscaled_img[i]
@@ -211,10 +249,6 @@ function onDraw()
     		setc(val*colorscale.r,val*colorscale.g,val*colorscale.b)
     		screen.drawRectF(px.x-1,px.y-1,1,1)
     	end
-    	-- Crosshair
-    	setc(255,255,255,20)
-    	screen.drawLine((w-pad)/2, 0, (w-pad)/2, h-pad) -- vert
-    	screen.drawLine(0, (h-pad)/2, w-pad, (h-pad)/2) -- hor
     	
     	-- Progress line
     	if scanning then
@@ -227,7 +261,7 @@ function onDraw()
     		screen.drawCircle(selected.px,selected.py,3)
     		screen.drawTextBox(0,h-pad,w-pad,pad,selected.val)
     	end
-    elseif image[1]==nil then
+    elseif upscaled_img[1]==nil then
     	setc(255,255,255)
     	screen.drawText(2,2,"no\ndata")
     end
