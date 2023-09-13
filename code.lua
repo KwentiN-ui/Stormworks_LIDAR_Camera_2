@@ -19,6 +19,7 @@ pad = 6
 selected = {px=nil,py=nil,val=nil}
 
 scanbutton = {cur=false,last=false}
+zoombutton = {cur=false,last=false}
 
 function isPointInRectangle(x, y, rectX, rectY, rectW, rectH)
 	return x > rectX and y > rectY and x < rectX+rectW and y < rectY+rectH
@@ -126,6 +127,13 @@ function onTick()
     scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
 	if scanbutton.cur and not scanbutton.last then scanning=not scanning end
 	
+	-- Zoom to selection
+	zoombutton.cur = selected.val~=nil and isPointInRectangle(inputX,inputY,w-pad, 16, pad, 8)
+	
+	if zoombutton.cur and not zoombutton.last then
+		print("Y")	
+	end
+	
 	reset = isPointInRectangle(inputX,inputY,w-pad, 8, pad, 8)
 	if reset then 
 		zoom = 0.5 x0,y0 = 0,0 
@@ -160,6 +168,7 @@ function onTick()
 	end
 	
 	scanbutton.last = scanbutton.cur
+	zoombutton.last = zoombutton.cur
 end
 
 function onDraw()
@@ -175,6 +184,9 @@ function onDraw()
 	
 	if reset then setc(0,255,0) else setc(255,255,255) end
 	screen.drawTextBox(0,8,w-1,8,"R",1,0)
+	
+	if zoombutton.cur then setc(0,255,0) elseif selected.val==nil then setc(255,255,255,20) else setc(255,255,255) end
+	screen.drawTextBox(0,16,w-1,8,"Z",1,0)
 	
     if image[1]~=nil then
     	for i=1,#upscaled_img do
