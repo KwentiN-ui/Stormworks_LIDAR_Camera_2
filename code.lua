@@ -179,6 +179,11 @@ function onTick()
 		selected.val = math.floor(upscaled_data[to_pos(inputX,inputY,w-pad)]*10)/10
 	end
 	
+	-- clear selection (press on lower padding zone)
+	if isPressed and isPointInRectangle(inputX, inputY, 0, h-pad, w-pad, pad) then
+		selected = {px=nil,py=nil,val=nil}
+	end
+	
 	if scanning then
 		if curpos>0 then image[curpos] = dst end
 		
@@ -261,10 +266,13 @@ function onDraw()
     	if selected.val~=nil then
     		setc(255,255,255)
     		screen.drawCircle(selected.px,selected.py,3)
-    		screen.drawTextBox(0,h-pad,w-pad,pad,selected.val)
+    		screen.drawTextBox(0,h-pad+1,w-pad,pad,selected.val,0)
     	end
     elseif upscaled_img[1]==nil then
     	setc(255,255,255)
-    	screen.drawText(2,2,"no\ndata")
+    	screen.drawText(0,1,"SCAN>")
+    	screen.drawText(0,9,"RST>")
+    	screen.drawText(0,17,"ZOOM>")
+    	screen.drawText(0,h-pad+1,"RES>")
     end
 end
