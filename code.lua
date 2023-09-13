@@ -14,9 +14,16 @@ x0,y0 = 0,0
 image = {}
 upscaled_img = {}
 pad = 6
+
+scanbutton = {cur=false,last=false}
+
+function isPointInRectangle(x, y, rectX, rectY, rectW, rectH)
+	return x > rectX and y > rectY and x < rectX+rectW and y < rectY+rectH
+end
+
 function to_xy(pos,n)
 	-- returns (x,y) for a position integer between 1 and n*n
-	return {x=(pos-1)%n+1,y=(pos-1)//n+1}
+	return {x=(pos-1)%n+1,y=math.floor((pos-1)/n)+1}
 end
 
 function to_pos(x, y, n)
@@ -111,7 +118,11 @@ function onTick()
 	isPressed = input.getBool(1)
 	inputX = input.getNumber(3)
     inputY = input.getNumber(4)
-	if isPressed then scanning=true end
+    
+    
+    scanbutton.cur = isPressed and isPointInRectangle(inputX, inputY, w-pad, 0, pad, 8)
+
+	if scanbutton.cur and not scanbutton.last then scanning=not scanning end
 	output.setBool(1,scanning)
 	if scanning then
 		laser_out = pos_to_laserc(curpos,img_res,x0,y0,zoom)
@@ -119,7 +130,7 @@ function onTick()
 		curpos = curpos + 1
 		
 		if curpos-1 >= posmax then -- SCAN FINISHED
-			scanning = false
+			--scanning = false
 			curpos = 1
 			image = normalize(image,0,100)
 			upscaled_img = upscale(image,w-pad,h-pad)
@@ -131,6 +142,7 @@ function onTick()
 
 	end
 	
+	scanbutton.last = scanbutton.cur
 end
 
 function onDraw()
@@ -139,13 +151,10 @@ function onDraw()
 	screen.setColor(table.unpack(backgr)) --BG
 	screen.drawClear()
 	screen.setColor(255*colorscale.r,255*colorscale.g,255*colorscale.b)
+	if scanning then screen.setColor(0,255,0) else screen.setColor(255,255,255) end
+	screen.drawTextBox(0,0,w-1,8,"S",1,0)
 	
-	if scanning and not contin then
-		progress = math.floor(curpos/posmax*100)
-		screen.setColor(255-progress*2.55,progress*2.55,0)
-		screen.drawTextBox(0,0,w,h,tostring(progress).."%",0,0)	
-	end
-    if not scanning and image[1]~=nil then
+    if image[1]~=nil then
     	for i=1,#upscaled_img do
     		px = to_xy(i,w-pad)
     		val = upscaled_img[i]
