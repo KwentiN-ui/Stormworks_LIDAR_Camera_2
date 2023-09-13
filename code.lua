@@ -1,5 +1,4 @@
--- Laser Distance Sensor geht von -1 bis 1
-img_res = 2
+img_res = 10
 scanning = false
 contin = false
 curpos = 1
