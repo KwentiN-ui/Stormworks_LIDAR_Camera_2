@@ -10,6 +10,7 @@
 backgr = {0, 30, 30} -- background
 textc = {255,255,255} -- text
 colorscale = {r=0,g=1,b=0} -- image, values between 0-1
+progressc = {r=255,g=255,b=255} -- Progress bar
 
 -- SETTINGS
 pos_offset = 6   -- make larger if you have black upper left corner
@@ -253,15 +254,8 @@ function onDraw()
 	
 	-- Mode
 	setc(table.unpack(textc))
-	screen.drawTextBox(0,1,w,h,calc_time(img_res, 60),1,1)	
+	screen.drawTextBox(0,0,w,h,calc_time(img_res, 60),1,1)	
 
-	
-    -- Progress line
-	if scanning then
-    	setc(table.unpack(textc))
-    	screen.drawLine(0,h-pad,curpos/posmax*(w-pad),h-pad)
-	end
-	
 	-- DRAW THE IMAGE
     if upscaled_img[1]~=nil then
     	for i=1,#upscaled_img do
@@ -276,13 +270,19 @@ function onDraw()
     	if selected.val~=nil then
     		setc(table.unpack(textc))
     		screen.drawCircle(selected.px,selected.py,3)
-    		screen.drawTextBox(0,h-pad+1,w-pad,pad,selected.val,-1)
+    		screen.drawTextBox(0,h-pad,w-pad,pad,selected.val,-1)
     	end
     elseif upscaled_img[1]==nil then
     	setc(table.unpack(textc))
     	screen.drawTextBox(0,1,w-pad,8,"SCAN>",1)
     	screen.drawTextBox(0,9,w-pad,8,"RST>",1)
     	screen.drawTextBox(0,17,w-pad,8,"ZOOM>",1)
-    	screen.drawTextBox(0,h-pad+1,w-pad,8,"T[s]",-1)
+    	
+    	if w>32 then screen.drawTextBox(0,h-pad,w-pad,8,"Time[s]>",-1) else screen.drawTextBox(0,h-pad,w-pad,8,"T>",-1)  end
     end
+        -- Progress line
+	if scanning then
+    	setc(progressc.r,progressc.g,progressc.b,100)
+    	screen.drawLine(0,0,curpos/posmax*(w-pad),0)
+	end
 end
