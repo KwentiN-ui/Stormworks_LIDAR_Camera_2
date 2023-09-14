@@ -1,3 +1,11 @@
+--- LIDAR Camera 2 --
+---------------------
+-- made by KwentiN --
+---------------------
+-- GitHub: https://github.com/KwentiN-ui/Stormworks_LIDAR_Camera_2
+-- For instructions visit the Steam Workshop Page
+-- You may reuse and/or modify this code to your liking (MIT License)
+
 -- Colors
 backgr = {0, 30, 30} -- background
 textc = {255,255,255} -- text
@@ -11,6 +19,7 @@ adjust_sens = 10 -- sensitivity for constant offset input on 15,16
 
 setc = screen.setColor
 
+-- don't change these
 posmax = img_res^2
 scanning = false
 contin = false
@@ -25,10 +34,14 @@ selected = {px=nil,py=nil,val=nil}
 
 mode = 2
 
+
 scanbutton = {cur=false,last=false}
 zoombutton = {cur=false,last=false}
 modebutton = {cur=false,last=false}
 
+function calc_time(res,fps)
+	return math.floor(res^2/fps * 10)/10
+end
 
 function isPointInRectangle(x, y, rectX, rectY, rectW, rectH)
 	return x > rectX and y > rectY and x < rectX+rectW and y < rectY+rectH
@@ -45,6 +58,8 @@ function to_pos(x, y, n)
 end
 
 function upscale(vector, new_width, new_height)
+	-- this function was entirely written by the Opera Aria Client, based on GPT4,
+	-- please report unexpected behaviour on Steam or Github
     local size = #vector
     local n = math.sqrt(size)
     
@@ -168,7 +183,7 @@ function onTick()
 		posmax = img_res^2
 		image = {}
 	end
-	
+	-- Reset button behaviour
 	reset = isPressed and isPointInRectangle(inputX,inputY,w-pad, 8, pad, 8)
 	if reset then 
 		zoom = 0.5 x0,y0 = 0,0 
@@ -188,8 +203,9 @@ function onTick()
 	if isPressed and isPointInRectangle(inputX, inputY, 0, h-pad, w-pad, pad) then
 		selected = {px=nil,py=nil,val=nil}
 	end
-	
+	-- Image aquisition
 	if scanning then
+		-- Laser will do "pos_offset" runs before gathering data to bypass delay
 		if curpos>0 then image[curpos] = dst end
 		
 		curpos = curpos + 1
@@ -215,18 +231,19 @@ end
 
 function onDraw()
 	w,h = screen.getWidth(),screen.getHeight()
-	-- will always be drawn:
-	setc(table.unpack(backgr)) --BG
+	-- draw Background
+	setc(table.unpack(backgr))
 	screen.drawClear()
+	-- draw Image Background
 	setc(0,0,0)
 	screen.drawRectF(0,0,w-pad,h-pad)
-	
+	-- Scanning Button
 	if scanning then setc(0,255,0) else setc(table.unpack(textc)) end
 	screen.drawTextBox(0,0,w-1,8,"S",1,0)
-	
+	-- Reset Button
 	if reset then setc(0,255,0) else setc(table.unpack(textc)) end
 	screen.drawTextBox(0,8,w-1,8,"R",1,0)
-	
+	-- Zoombutton
 	if zoombutton.cur then setc(0,255,0) else setc(table.unpack(textc)) end
 	if selected.val~=nil then
 		screen.drawTextBox(0,16,w-1,8,"+",1,0)
@@ -234,23 +251,10 @@ function onDraw()
 		screen.drawTextBox(0,16,w-1,8,"-",1,0)
 	end
 	
-	-- Modusanzeige
+	-- Mode
 	setc(table.unpack(textc))
-	if mode==1 then
-		screen.drawRectF(w-pad,h-pad,pad,pad)	
-	end
-	if mode==2 then
-		screen.drawRectF(w-pad,h-pad,pad/2,pad)	
-	end
-	if mode==3 then
-		screen.drawRectF(w-pad,h-pad,pad/2,pad/2)	
-	end
-	if mode==4 then
-		screen.drawRectF(w-pad,h-pad,pad/4,pad/2)	
-	end
-	if mode==5 then
-		screen.drawRectF(w-pad,h-pad,pad/4,pad/4)
-	end
+	screen.drawTextBox(0,0,w,w,calc_time(img_res, 60),1,1)	
+
 	
     -- Progress line
 	if scanning then
@@ -258,6 +262,7 @@ function onDraw()
     	screen.drawLine(0,h-pad,curpos/posmax*(w-pad),h-pad)
 	end
 	
+	-- DRAW THE IMAGE
     if upscaled_img[1]~=nil then
     	for i=1,#upscaled_img do
     		px = to_xy(i,w-pad)
@@ -271,13 +276,13 @@ function onDraw()
     	if selected.val~=nil then
     		setc(table.unpack(textc))
     		screen.drawCircle(selected.px,selected.py,3)
-    		screen.drawTextBox(0,h-pad+1,w-pad,pad,selected.val,0)
+    		screen.drawTextBox(0,h-pad+1,w-pad,pad,selected.val,-1)
     	end
     elseif upscaled_img[1]==nil then
     	setc(table.unpack(textc))
     	screen.drawTextBox(0,1,w-pad,8,"SCAN>",1)
     	screen.drawTextBox(0,9,w-pad,8,"RST>",1)
     	screen.drawTextBox(0,17,w-pad,8,"ZOOM>",1)
-    	screen.drawTextBox(0,h-pad+1,w-pad,8,"RES>",1)
+    	screen.drawTextBox(0,h-pad+1,w-pad,8,"RES>",-1)
     end
 end
