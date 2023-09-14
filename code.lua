@@ -194,7 +194,7 @@ function onTick()
 		end
 	
 	-- Pixel selection
-	if upscaled_data[1]~=nil and isPressed and isPointInRectangle(inputX, inputY, 0, 0, w-pad, h-pad) then
+	if isPressed and isPointInRectangle(inputX, inputY, 0, 0, w-pad, h-pad) then
 		selected.px = inputX
 		selected.py = inputY
 		selected.val = math.floor(upscaled_data[to_pos(inputX,inputY,w-pad)]*10)/10
@@ -216,6 +216,7 @@ function onTick()
 			normalized = normalize(image,0,255)
 			upscaled_img = upscale(normalized,w-pad,h-pad)
 			upscaled_data = upscale(image,w-pad,h-pad)
+			if selected.val~=nil then selected.val = math.floor(upscaled_data[to_pos(selected.px,selected.py,w-pad)]*10)/10 end
 			image = {}
 		end
 		
