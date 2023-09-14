@@ -49,7 +49,7 @@ end
 
 function to_xy(pos,n)
 	-- returns (x,y) for a position integer between 1 and n*n
-	return {x=(pos-1)%n+1,y=math.floor((pos-1)/n)+1}
+	return {x=(pos-1)%n+1,y=(pos-1)//n+1}
 end
 
 function to_pos(x, y, n)
@@ -253,7 +253,7 @@ function onDraw()
 	
 	-- Mode
 	setc(table.unpack(textc))
-	screen.drawTextBox(0,0,w,w,calc_time(img_res, 60),1,1)	
+	screen.drawTextBox(0,1,w,h,calc_time(img_res, 60),1,1)	
 
 	
     -- Progress line
@@ -283,6 +283,6 @@ function onDraw()
     	screen.drawTextBox(0,1,w-pad,8,"SCAN>",1)
     	screen.drawTextBox(0,9,w-pad,8,"RST>",1)
     	screen.drawTextBox(0,17,w-pad,8,"ZOOM>",1)
-    	screen.drawTextBox(0,h-pad+1,w-pad,8,"RES>",-1)
+    	screen.drawTextBox(0,h-pad+1,w-pad,8,"T[s]",-1)
     end
 end
