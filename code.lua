@@ -194,7 +194,7 @@ function onTick()
 		end
 	
 	-- Pixel selection
-	if isPressed and isPointInRectangle(inputX, inputY, 0, 0, w-pad, h-pad) then
+	if isPressed and isPointInRectangle(inputX, inputY, 0, 0, w-pad, h-pad) and upscaled_data[1]~=nil then
 		selected.px = inputX
 		selected.py = inputY
 		selected.val = math.floor(upscaled_data[to_pos(inputX,inputY,w-pad)]*10)/10
